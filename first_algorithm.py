@@ -14,6 +14,7 @@ class Mouse():
         self.paths = {}
         self.path = ["", 0]
         self.choices = []
+        self.dead = False
 
     def get_choices(self):
         options = [3, 0, 1]
@@ -64,36 +65,31 @@ class Mouse():
         if self.pos not in self.paths:
             self.paths[self.pos] = [[self.path[0], self.path[1]], "{}".format((self.face+2)%4)]
         elif self.paths[self.pos][0][1] > self.path[1]:
-            self.paths[self.pos][0] = [self.path[0], self.path[1]]
+            self.paths[self.pos] = [[self.path[0], self.path[1]], "{}".format((self.face+2)%4)]
         if not self.choices:
             val = self.path[1]
+            self.dead = True
             self.go_back((self.face-2)%4)
             return val
         options = []
         for choice in self.choices:
-            options.append(self.paths[self.pos][1] + self.find_best(choice))
+            if str(choice) not in self.paths[self.pos][1]:
+                self.dead = False
+                self.path[0] += str(choice)
+                options.append(self.paths[self.pos][0][1] + self.find_best(choice))
+        if self.dead:
+            self.go_back(int(self.paths[self.pos][1][0]))
+        else:
+            val = self.path[1]
+            self.dead = True
+            self.go_back((self.face-2)%4)
+            return val
         return max(options)
 
 
 def main():
     bob = Mouse()
-    while True:
-        bob.go()
-        if bob.pos not in bob.paths:
-            bob.paths[bob.pos] = [[bob.path[0], bob.path[1]], "{}".format((bob.face+2)%4)]
-        elif bob.paths[bob.pos][0][1] > bob.path[1]:
-            bob.paths[bob.pos] = [[bob.path[0], bob.path[1]], "{}".format((bob.face+2)%4)]
-        log(bob.paths)
-        if not bob.choices:
-            log(bob.paths[bob.pos][1][0])
-            bob.go_back(bob.paths[bob.pos][1][0])
-            log(bob.path)
-        for choice in bob.choices:
-            if str(choice) not in bob.paths[bob.pos][1]:
-                bob.turn_to(choice)
-                break
-        bob.paths[bob.pos][1] += "{}".format(bob.face)
-        bob.path[0] += "{}".format(bob.face)
+    bob.find_best(bob.face)
         
 
 if __name__ == "__main__":
