@@ -43,14 +43,14 @@ class Mouse():
         self.go()
 
     def go(self):
-        API.setColor(self.X, self.Y, "green")
+        API.setColor(self.X, self.Y, "g")
         if not self.dead:
             self.cells.append(self.pos)
         API.moveForward()
         self.update_pos()
         choices = self.get_choices()
         while choices and len(choices) < 2:
-            API.setColor(self.X, self.Y, "green")
+            API.setColor(self.X, self.Y, "g")
             if not self.dead:
                 self.cells.append(self.pos)
             self.turn_to(choices[0])
@@ -61,8 +61,10 @@ class Mouse():
 
 def main():
     bob = Mouse()
+    bob.go()
     while True:
-        bob.go()
+        log(bob.dead)
+        log(bob.loop)
         if not bob.choices:
             bob.dead = True
             bob.go_back()
@@ -74,6 +76,7 @@ def main():
             bob.dead = False
         if bob.pos in bob.cells and not bob.dead:
             bob.loop = True
+        bob.go()
 
 if __name__ == "__main__":
     main()
