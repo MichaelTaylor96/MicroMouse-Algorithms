@@ -86,10 +86,18 @@ class Mouse():
             return val
         return max(options)
 
+    def take_path(self, string):
+        for char in string:
+            self.go()
+            self.turn_to(int(char))
 
 def main():
     bob = Mouse()
+    bob.paths[bob.pos] = [["", 0], ""]
     bob.find_best(bob.face)
+    solution = bob.paths[(8, 8)][0][0]
+    bob.turn_to(0)
+    bob.take_path(solution)
         
 
 if __name__ == "__main__":
