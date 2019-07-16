@@ -48,6 +48,8 @@ class Mouse():
             self.cells.append(self.pos)
         API.moveForward()
         self.update_pos()
+        if self.pos not in self.cells:
+            self.cells.append(self.pos)
         choices = self.get_choices()
         while choices and len(choices) < 2:
             API.setColor(self.X, self.Y, "g")
@@ -56,6 +58,8 @@ class Mouse():
             self.turn_to(choices[0])
             API.moveForward()
             self.update_pos()
+            if self.pos not in self.cells:
+                self.cells.append(self.pos)
             choices = self.get_choices()
         self.choices = choices
 
@@ -63,20 +67,22 @@ def main():
     bob = Mouse()
     bob.go()
     while True:
-        log(bob.dead)
-        log(bob.loop)
         if not bob.choices:
-            bob.dead = True
             bob.go_back()
-        elif bob.loop:
-            bob.turn_to(bob.choices[-1])
-            bob.loop = False
         else:
-            bob.turn_to(bob.choices[0])
-            bob.dead = False
-        if bob.pos in bob.cells and not bob.dead:
-            bob.loop = True
-        bob.go()
+            dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+            cell_choices = [(bob.pos[0]+dirs[choice][0], bob.pos[1]+dirs[choice][1]) for choice in bob.choices]
+            for i, choice in enumerate(cell_choices):
+                if choice not in bob.cells:
+                    bob.turn_to(bob.choices[i])
+                    bob.go()
+                    break
+                elif cell_choices[i] == cell_choices[-1]:
+                    bob.turn_to(bob.choices[i])
+                    bob.go()
+                    break
+        
+
 
 if __name__ == "__main__":
     main()
