@@ -48,15 +48,6 @@ class Mouse():
         self.face = 0
         self.choices = []
         self.dead = False
-
-class Mouse():
-    def __init__(self):
-        self.X = 0
-        self.Y = 0
-        self.pos = (0, 0)
-        self.face = 0
-        self.choices = []
-        self.dead = False
         self.loop = False
         self.cells = []
         self.paths = {}
@@ -84,29 +75,63 @@ class Mouse():
         self.Y += dis[1]
         self.pos = (self.X, self.Y)
 
-    def go_back(self):
-        self.turn_to((self.face+2)%4)
+    def go_back(self, dirto):
+        self.turn_to(dirto)
         self.go()
+        self.path = self.paths[self.pos][0]
 
     def go(self):
-        API.setColor(self.X, self.Y, "g")
-        if not self.dead:
-            self.cells.append(self.pos)
-            ChoiceCells.append(ChoiceCell([], self.pos))
         API.moveForward()
+        moves = 1
         self.update_pos()
-        if self.pos not in self.cells:
-            self.cells.append(self.pos)
-            
         choices = self.get_choices()
         while choices and len(choices) < 2:
-            API.setColor(self.X, self.Y, "g")
-            if not self.dead:
-                self.cells.append(self.pos)
             self.turn_to(choices[0])
             API.moveForward()
+            moves += 1
             self.update_pos()
-            if self.pos not in self.cells:
-                self.cells.append(self.pos)
             choices = self.get_choices()
+        self.path[1] += moves
         self.choices = choices
+
+    def find_best(self, direction):
+        self.turn_to(direction)
+        if self.pos in self.paths:
+            self.paths[self.pos][1] += str(self.face)
+        self.go()
+        if self.pos not in self.paths:
+            self.paths[self.pos] = [[self.path[0], self.path[1]], "{}".format((self.face+2)%4)]
+        elif self.paths[self.pos][0][1] > self.path[1]:
+            self.paths[self.pos] = [[self.path[0], self.path[1]], "{}".format((self.face+2)%4)]
+        if not self.choices:
+            val = self.path[1]
+            self.dead = True
+            self.go_back((self.face-2)%4)
+            return val
+        options = []
+        for choice in self.choices:
+            if str(choice) not in self.paths[self.pos][1]:
+                self.dead = False
+                self.path[0] += str(choice)
+                options.append(self.paths[self.pos][0][1] + self.find_best(choice))
+        if self.dead:
+            self.go_back(int(self.paths[self.pos][1][0]))
+        else:
+            val = self.path[1]
+            self.dead = True
+            self.go_back((self.face-2)%4)
+            return val
+        return max(options)
+
+    def take_path(self, string):
+        for char in string:
+            self.go()
+            self.turn_to(int(char))
+
+def main():
+    bob = Mouse()
+    bob.paths[bob.pos] = [["", 0], ""]
+    bob.find_best(bob.face)
+    solution = bob.paths[(8, 8)][0][0]
+    bob.turn_to(0)
+    bob.take_path(solution)
